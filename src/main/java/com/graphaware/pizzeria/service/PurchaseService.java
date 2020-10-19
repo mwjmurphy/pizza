@@ -114,6 +114,10 @@ public class PurchaseService {
         if (pizzas == null) {
             return 0.0;
         }
+
+        // if we have 3 pizzas find the cheapest - will ignore adding cheapest to totalPrice later on
+        final int cheapestIndex = pizzas.size() == 3 ? findPizzaWithCheapestPrice(pizzas) : -1;
+        
         // buy a pineapple pizza, get 10% off the others
         boolean applyPineappleDiscount = false;
         for (Pizza pizza : pizzas) {
@@ -121,18 +125,47 @@ public class PurchaseService {
                 applyPineappleDiscount = true;
             }
         }
-        for (Pizza pizza : pizzas) {
-            if (pizza.getToppings().contains("pineapple")) {
-                totalPrice += pizza.getPrice();
-            }  else {
-                if (applyPineappleDiscount) {
-                        totalPrice += pizza.getPrice() *0.9;
-                } else {
-                    totalPrice += pizza.getPrice();
-                }
-            }
+        for (int index = 0; index < pizzas.size(); index++) {
+        	// if we have 3 pizzas then dont add cheapest.
+        	if (index != cheapestIndex) {
+        		Pizza pizza = pizzas.get(index);
+	            if (pizza.getToppings().contains("pineapple")) {
+	                totalPrice += pizza.getPrice();
+	            }  else {
+	                if (applyPineappleDiscount) {
+	                        totalPrice += pizza.getPrice() *0.9;
+	                } else {
+	                    totalPrice += pizza.getPrice();
+	                }
+	            }
+        	}
         }
         return totalPrice;
+    }
+    
+    /**
+     * find the pizza with the cheapest price
+     * @param pizzas - list of pizzas - may be null
+     * @return index to cheapest pizza in list
+     */
+    private int findPizzaWithCheapestPrice(List<Pizza> pizzas) {
+    	int cheapestIndex = 0;
+    	if (pizzas.size() == 3) {
+    		Double cheapest = null;
+    		for (int index = 0 ; index < 3 ; index++) {
+    			Pizza pizza = pizzas.get(index);
+    			Double price = pizza.getPrice();
+    			if (cheapest == null) {
+    				cheapest = price;
+    			} else {
+    				if (cheapest.compareTo(price) > 0)  {
+    					cheapest = price;
+    					cheapestIndex = index;
+    				}
+    			}
+    		}
+    	}
+    	return cheapestIndex;
     }
 
     @PreAuthorize("hasRole('PIZZA_MAKER')")
